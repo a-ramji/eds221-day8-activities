@@ -1,0 +1,136 @@
+---
+title: "Day 8 Activities"
+format: html
+editor: visual
+---
+
+## Task 1: Do your data viz WORST!
+
+Setup
+
+```{r}
+library(tidyverse)
+library(here)
+library(janitor)
+library(paletteer)
+library(sf)
+```
+
+from data-to-viz example:
+
+```{r}
+# library(viridis)
+# library(patchwork)
+# library(hrbrthemes)
+# library(ggraph)
+# library(igraph)
+# library(kableExtra)
+# library(ggridges)
+# library(circlepackeR)
+```
+
+Reading in Data:
+
+```{r}
+space_launches_data <- read_csv(here("data", "space_launches.csv"))
+```
+
+Just like it takes a lot of work to make a really wonderful graph, it takes effort to make a graph really awful. Put effort and creativity into this - you will learn a lot in the process if you do.
+
+Using the \'space_launches.csv\' data, create a new .Rmd and create your worst possible graph by customizing (from the ggplot default) in **at least 8 ways** - more encouraged - to make it as terrible as possible. The data were previously shared for #TidyTuesday, and descriptions of dataset & variables can be found [**here**](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-01-15). You can plot whatever variable(s) you choose, and make whatever graph type you want.
+
+```{r}
+launches_per_year <-  space_launches_data |> 
+  count(launch_year)
+
+missions_per_agency <- space_launches_data |> 
+  group_by(agency) |> 
+  summarize(number_of_missions = n(), na.rm = TRUE)
+  
+```
+
+```{r}
+bad_viz_1 <- missions_per_agency |> 
+  ggplot(aes(x = agency, y = number_of_missions)) +
+  geom_point(aes(shape = agency)) +
+  # scale_fill_paletteer_d(palette = "khroma::hawaii") +
+  
+  labs(x = "agency",
+       y = "went to space this many times",
+       title = "agencies to space",
+       subtitle = "number of times agencies went to space based on data from 2019-01-05 tidy tuesday on rfordatascience by jonthegeek"
+       ) +
+  theme(panel.background = element_rect(color = "magenta", size = 5, fill = "orange"),
+        plot.background = element_rect(fill = "chartreuse"),
+        panel.grid.major.x = element_line(color = "brown"),
+        panel.grid.minor.y = element_line(color = "purple"),
+        axis.text.x = element_text(color = "purple"),
+        axis.text.y = element_text(color = "grey")
+        ) 
+  
+
+
+bad_viz_1
+```
+
+that hurts to look at :)
+
+## Task 2
+
+```{r}
+sf_ghg_data <- read_csv(here("data", "San_Francisco_communitywide_Greenhouse_Gas_inventory.csv")) |> 
+  clean_names()
+```
+
+Create a summary table of total annual greenhouse gas emissions (only from Emissions_mtCO2e column) by sector_general
+
+```{r}
+ghg_sector_summary <- sf_ghg_data |> 
+  group_by(sector_general) |> 
+  summarize(total_ghg_emissions = sum(emissions_mt_co2e, na.rm = TRUE))
+
+ghg_sector_summary
+```
+
+Create a summary table of total annual greenhouse gas emissions (only from Emissions_mtCO2e column) by year and commodity type
+
+```{r}
+ghg_yr_commodity_summary <- sf_ghg_data |> 
+  group_by(calendar_year, commodity_type) |> 
+  summarize(total_ghg_emissions = sum(emissions_mt_co2e, na.rm = TRUE))
+
+ghg_yr_commodity_summary
+```
+
+Create a subset of the data that only contains observations from 2005 on, only for observations where Sector_Detail2 contains the pattern "PG&E", then limit to columns Calendar_Year, Sector_Detail2 and Emissions_mtCO2e.
+
+```{r}
+observations_pge <- sf_ghg_data |> 
+  filter(calendar_year >= 2005, str_detect(sector_detail2, pattern = "PG&E")) |> 
+  select(calendar_year, sector_detail2, emissions_mt_co2e)
+
+head(observations_pge)
+```
+
+## **Task 3: Do your data viz best**
+
+Create a finalized graph (as perfect as you can make it) using the San Francisco GHG emissions dataset. **You** get to choose what you want to visualize. You can pick which variables & observations you\'re interested in. You may want to do some wrangling / summarizing first.
+
+Once you\'ve decided on what to plot, create the best graph that you can to communicate what\'s going on with the data.
+
+```{r}
+# my_ghg_subset <- sf_ghg_data |> 
+#   
+#   
+
+# good_sf_ghg_graph <- sf_ghg_data |> 
+#   ggplot(aes(x = ))
+```
+
+```{r}
+# good_sf_ghg_graph <- 
+ghg_yr_commodity_summary |> 
+  # mutate(ordered_commodity_type = reorder(commodity_type, total_ghg_emissions))
+  ggplot(aes(x = total_ghg_emissions, y = fct_reorder(commodity_type, total_ghg_emissions))) +
+  geom_col()
+```
